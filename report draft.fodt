@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" office:mimetype="application/vnd.oasis.opendocument.text" office:version="1.2">
+ <office:styles>
+  <style:style style:name="Normal" style:display-name="Normal" style:family="paragraph">
+   <style:text-properties fo:font-size="12pt" fo:font-weight="normal"/>
+  </style:style>
+  <style:style style:name="Heading-1" style:display-name="Heading 1" style:family="paragraph" style:parent-style-name="Normal" style:next-style-name="Normal" style:default-outline-level="1">
+   <style:text-properties fo:font-size="18pt" fo:font-weight="bold"/>
+  </style:style>
+  <style:style style:name="Heading-2" style:display-name="Heading 2" style:family="paragraph" style:parent-style-name="Normal" style:next-style-name="Normal" style:default-outline-level="2">
+   <style:text-properties fo:font-size="16pt" fo:font-weight="bold"/>
+  </style:style>
+  <style:style style:name="Heading-3" style:display-name="Heading 3" style:family="paragraph" style:parent-style-name="Normal" style:next-style-name="Normal" style:default-outline-level="3">
+   <style:text-properties fo:font-size="14pt" fo:font-weight="bold"/>
+  </style:style>
+  <style:style style:name="Heading-4" style:display-name="Heading 4" style:family="paragraph" style:parent-style-name="Normal" style:next-style-name="Normal" style:default-outline-level="4">
+   <style:text-properties fo:font-size="12pt" fo:font-weight="bold"/>
+  </style:style>
+  <style:style style:name="Heading-5" style:display-name="Heading 5" style:family="paragraph" style:parent-style-name="Normal" style:next-style-name="Normal" style:default-outline-level="5">
+   <style:text-properties fo:font-size="10pt" fo:font-weight="bold"/>
+  </style:style>
+  <style:style style:name="Heading-6" style:display-name="Heading 6" style:family="paragraph" style:parent-style-name="Normal" style:next-style-name="Normal" style:default-outline-level="6">
+   <style:text-properties fo:font-size="8pt" fo:font-weight="bold"/>
+  </style:style>
+ </office:styles>
+ <office:automatic-styles/>
+ <office:body>
+  <office:text>
+   <text:p text:style-name="Normal">Weight Change, Exercise, and Calorie Consumption</text:p>
+   <text:p text:style-name="Normal"/>
+   <text:p text:style-name="Normal">I. Abstract</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>A. Subject</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>1. From March of 2017 through Jan 22 2021, I recorded the number of calories consumed during each of my meals, estimated the composition of these meals, documented my exercise sessions, and estimated the duration and intensity of these exercise sessions. In this article, I analyze these records; evaluate a linear model relating daily caloric intake, calories expended through exercise, and daily weight change; and prescribe a set of dietary and exercise practices to effectively manage my weight.</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>B. Finding Summary</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>1. Over the analysis period, my weight increased from approximately 177 lbs. to approximately 184 lbs. This increase occurred gradually </text:p>
+   <text:p text:style-name="Normal">II. Introduction</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>A. Subject</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>B. Finding Summary</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>C. Organization</text:p>
+   <text:p text:style-name="Normal">III. Data Sources</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>A. Introduction to sources</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>B. Weight Records</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>1. Time span covered by records</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>2. Weighing Practices</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Two weight measures</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="7"/>i. Analog measure</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* 1-2lb error bars</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Inconsistent calibration</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="7"/>ii. Digital Measure</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* 0.2 lb error margins</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>b. weight in morning before meals undressed</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>c. Transient effects from intestines and bladder</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="7"/>d. intestines ~1.2lb variation</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>C. Exercise Records</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>1. Time span covered by records</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>2. Exercise Practices</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Cycling</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="7"/>i. Daily Bicycle commuting</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Distances for each job</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Inconsistently tracked and not included in analysis</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Probably accounted for significant fraction of exercise calories burned through exercise. Roughly 150KCal/Day.</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="7"/>ii. Running</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Primarily treadmill running</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* brief period outdoor running when treadmill broken</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Distance/Cal Estimates</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="11"/>** Treadmill (time period)</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="11"/>** Smart Shoes (time period)</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="11"/>** Systemmatic Discrepancy (smart shoes reported fewer)</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="7"/>iii. weight lifting</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Primarily at Gym and personal free weights</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Focused on biceps, triceps with limited focus on other muscle groups.</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Time periods of consistent weight lifting</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Not included in analysis</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>3. Record Formats</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. TODO Cards</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>b. Exercise Cards</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>c. Map My Run App</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>4. Deficiencies</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Systemmic discrepancy between treadmill speed and distance measures and smart shoe measurements</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>D. Dietary Records</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>1. Time span covered by records</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>2. Dietary Practices during analysis periods</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. DASH Diet</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>b. Estimation Practices</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="7"/>i. Estimation of Servings</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Servings Estimated based on DASH guidelines</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="7"/>ii. Estimation of Calories</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Calorie Lookup List</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Dead reckoning</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Rounding to 200 KCals</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>3. Record Formats</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Dietary Cards</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>b. ARF-Utils</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="7"/>i. introduction of Fats servings category latter</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>c. Coverage (proportion of days accounted for)</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>4. Deficiencies</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Clipping</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="7"/>i. some meals not recorded.</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="7"/>ii. Apparently random exclusion</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="7"/>iii. Estimated proportion clipped</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>b. Rounding</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="7"/>i. Rounded to nearest 200KCal</text:p>
+   <text:p text:style-name="Normal">IV. Theoretical Framework</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>A. Linear model of Weight Change</text:p>
+   <text:p text:style-name="Normal">IV. Analysis</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>A. Time span covered by analysis</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>B. Aggregation of Data Records</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>1. Manual Transcription of Card based records</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>2. Spreadsheet exports from Map My Run and ARF Util Apps</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>C. Composite Data Matrix</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>1. Compute inner join over date</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>2. Group By date to compute daily aggregates of meals, exercise, and max for weight</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>3. Findings</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Average Increase in Exercise Frequency and Intensity</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>b. Roughly Stable Caloric Intake</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>c. Average Weight Gain</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="7"/>i. Model and Model Parameters</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="7"/>ii. Correlation and Significance</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="7"/>iii. Interpretation</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Result is inconsistent with the theoretical model presented above and the findings validating the model presented below.</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Assumed to be an artifact of clipping and rounding errors introduced.</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="9"/>* Using the model presented below, daily caloric intake combined with reported exercise levels should have been sufficient to lose 0.6lbs on average per day.</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>D. Delta Weight Matrix</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>1. Partition Composite Matrix into Series of “Spans”</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Span consists of a series of days in which the first and last day have weight measurements, every intervening day has a caloric intake measurement, and the start date has a caloric intake measurement.</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>2. Collapse Spans</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Compute the mean daily caloric consumption over each span.</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>b. Compute the mean daily caloric expenditure through exercise over each span.</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>c. compute the mean daily weight change over each span.</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>3. Resulting Data Set Characterization</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Number of Rows</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>b. Number of Fields</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>4. Findings</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>E. Computation of Relation Between Daily Caloric Intake and Weight Change</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>1. Division of observed Range of Caloric Intake into Increments of 200KCAl</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>2. Group Delta Weight Matrix Entries By Caloric Intake in Increments</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>3. Remove Increments with Fewer than 5 Entries</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>4. Compute Mean Weight Change within Remaining increments</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>5. Resulting Data Set Characterization </text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Number of Rows</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>b. Number of Fields</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>6. Findings</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Negative Linear Relation Between Calories Consumed and Magnitude of Weight Loss</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>b. Model and Model Parameters</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>c. Correlation and Significance</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>d. Interpretation</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>e. Basal Metabolism Estimation</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>F. Computation of Relation Between Daily Caloric Intake and Probability of Weight Loss</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>1. Division of observed Range of Caloric Intake into Increments of 200KCAl</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>2. Group Delta Weight Matrix Entries By Caloric Intake in Increments</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>3. Remove Increments with Fewer than 5 Entries</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>4. Compute Proportion of Spans that reported weight loss</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>5. Resulting Data Set Characterization </text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Number of Rows</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>b. Number of Fields</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>6. Findings</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Negative Linear Relation Between Calories Consumed and Probability of Weight Loss</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>b. Model and Model Parameters</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>c. Correlation and Significance</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>d. Interpretation</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>e. Basal Metabolism Estimation</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>F. Computation of Relation Between Daily Caloric Intake and Calories Expended through Daily Exercise</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>1. Division of observed Range of Daily Calorie Expenditure into Increments of 50KCAl</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>2. Group Delta Weight Matrix Entries By Exercise Intensity in Increments</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>3. Remove Increments with Fewer than 5 Entries</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>4. Compute mean weight Change</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>5. Resulting Data Set Characterization </text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Number of Rows</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>b. Number of Fields</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>6. Findings</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Negative Linear Relation Between Exercise Intensity and Weight Gain</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>b. Model and Model Parameters</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>c. Correlation and Significance</text:p>
+   <text:p text:style-name="Normal">VI. Practice Recommendations</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="1"/>A. Reduce daily caloric intake</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>1. Use Calorie limits</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Use the model parameters to set a daily calorie limit of 1800 <text:s text:c="2"/>KCal.</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>2. Continue calorie counting</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. maintain awareness of calories eaten to increase probability that I will limit calories to daily limits.</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>3. Use calorie pacing</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Resume using a device that divides the daily calorie limit into the number of hours per day and based on consumption tracks the number of calories that can be eaten at any given time.</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="3"/>4. Continue aerobic exercise</text:p>
+   <text:p text:style-name="Normal"> <text:s text:c="5"/>a. Maintain current targets, but do not increase them further.</text:p>
+   <text:p text:style-name="Normal">VII. Conclusion</text:p>
+   <text:p text:style-name="Normal"/>
+  </office:text>
+ </office:body>
+</office:document>

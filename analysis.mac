@@ -1,0 +1,1320 @@
+/*
+*/
+load (draw)$
+load (stats)$
+load(lsquares)$
+load (descriptive)$
+load ("maxima_csv_analysis/core.mac")$
+
+startYear: 2017$
+
+/*
+  Accepts two arguments: year; and doy, a Day of Year; and returns the
+  number of days that elapsed between Jan 1 2017 and the given date.
+
+  Note: this function assumes that every year is 365 days long.
+*/
+getN (year, doy) :=
+  (year - startYear) * 365 + doy;
+
+/* I. Source Data */
+
+weight_id_index: 1$
+weight_weight_index: 2$
+weight_year_index: 6$
+weight_doy_index: 7$ /* "day of year" */
+
+weight_first_doy: 188$
+
+weight_id: new (field (weight_id_index, identity))$
+weight_weight: new (field (weight_weight_index, identity))$
+weight_year: new (field (weight_year_index, identity))$
+weight_doy: new (field (weight_doy_index, buildq ([weight_first_doy], identity)))$
+
+meals_id_index: 1$
+meals_cals_index: 2$
+meals_year_index: 4$
+meals_doy_index: 5$
+meals_hour_index: 6$
+
+meals_first_doy: 168$
+
+meals_id: new (field (meals_id_index, identity))$
+meals_cals: new (field (meals_cals_index, identity))$
+meals_doy: new (field (meals_doy_index, buildq ([meals_first_doy], identity)))$
+meals_year: new (field (meals_year_index, identity))$
+meals_hour: new (field (meals_hour_index, identity))$
+
+/*
+  Accepts a string in the format used by the Map My Run export and
+  returns a numerical string representing the month.
+*/
+parseMonth (s) :=
+  if is (s = "Jan") then "01"
+  elseif is (s = "Feb.") then "02"
+  elseif is (s = "March") then "03"
+  elseif is (s = "April") then "04"
+  elseif is (s = "May") then "05"
+  elseif is (s = "June") then "06"
+  elseif is (s = "July") then "07"
+  elseif is (s = "Aug.") then "08"
+  elseif is (s = "Sept.") then "09"
+  elseif is (s = "Oct.") then "10"
+  elseif is (s = "Nov.") then "11"
+  elseif is (s = "Dec.") then "12"
+  else error ("[parseMonth] Error: Invalid month.")$
+
+/*
+  Accepts a string that represents a Date from the Map My Run export,
+  and returns a machine parsable data string.
+*/
+exercise_parseDate (s) :=
+  block ([xs, d, t, u, doy],
+    xs: regex_match ("([[:alpha:].]+) ([[:digit:]])([[:digit:]])?, ([[:digit:]]+)", s),
+    d: if is (xs [4] = false) then sconcat ("0", xs [3]) else sconcat (xs [3], xs [4]),
+    t: parse_timedate (sconcat (xs [5], "-", parseMonth (xs [2]), "-", d)),
+    timedate (t))$
+
+/*
+  Accepts a string that represents a date and returns the associated
+  day of the year.
+
+  Note: this function does not work for leap years. It returns values
+  that may be off by one.
+*/
+exercise_parseDoy (s) :=
+  block ([xs, t, y],
+    t: parse_timedate (s),
+    xs: regex_match ("([[:digit:]]+)-", s),
+    u: parse_timedate (sconcat (xs [2], "-01-01")), 
+    (t - u) / (60 * 60 * 24))$
+
+exercise_parseYear (s) :=
+  block ([xs],
+    xs: regex_match ("([[:digit:]]+)-", s),
+    parse_string (xs [2]))$
+
+/*
+  Accepts a date in the format used by the Map My Run app and returns
+  the number of days that elapsed between Jan 1 2017 and the given date.
+
+  Note: this function assumes that every year has 365 days.
+*/
+exercise_parseN (s) :=
+  block ([year, doy],
+    doy: exercise_parseDoy (s),
+    year: exercise_parseYear (s),
+    (year - startYear) * 365 + doy)$
+
+exercise_date_index: 2$
+exercise_cals_index: 4$
+exercise_time_index: 6$
+
+exercise_n: new (field (exercise_date_index, lambda ([x], exercise_parseN (exercise_parseDate (x)))))$
+exercise_year: new (field (exercise_date_index, lambda ([x], exercise_parseYear (exercise_parseDate (x)))))$
+exercise_doy: new (field (exercise_date_index, lambda ([x], exercise_parseDoy (exercise_parseDate (x)))))$
+exercise_date: new (field (exercise_date_index, exercise_parseDate))$
+exercise_cals: new (field (exercise_cals_index, identity))$
+exercise_time: new (field (exercise_time_index, identity))$
+
+W: read_matrix ("raw_data/weight.csv")$
+M: read_matrix ("raw_data/meals.csv")$
+E: read_matrix ("raw_data/exercise.csv")$
+
+/* II. Daily Caloric Intake */
+
+/*
+  Returns a matrix listing the meals with the correct DOY.
+
+  The source data set records times using the UTC timezone. This means
+  that late meals are recorded as having occured on the subsequent day.
+  This function, accounts for the timezone difference between UTC and
+  Baltimore, where the meals occured.
+
+  Note: the DOY calculation may be off by 1 for dates calculated during
+  leap years.
+*/
+corrected_meals_doy () :=
+  apply (matrix,
+    map (
+      lambda ([row],
+        block ([timezone],
+          timezone: 4, /* times are in UTC, this is needed to correct times for local times. */
+          [getFieldValue (meals_cals)(row),
+           getFieldValue (meals_year)(row),
+           if is (getFieldValue (meals_hour)(row) <= timezone)
+             then getFieldValue (meals_doy)(row) - 1
+             else getFieldValue (meals_doy)(row)])),
+       args (M)))$
+
+corrected_meals_cals_index: 1$
+corrected_meals_year_index: 2$
+corrected_meals_doy_index: 3$
+
+corrected_meals_cals: new (field (corrected_meals_cals_index, identity))$
+corrected_meals_year: new (field (corrected_meals_year_index, identity))$
+corrected_meals_doy: new (field (corrected_meals_doy_index, identity))$
+
+daily_meals_n_index: 1$
+daily_meals_cals_index: 2$
+
+daily_meals_n: new (field (daily_meals_n_index, identity))$
+daily_meals_cals: new (field (daily_meals_cals_index, identity))$
+
+/*
+  Returns a matrix listing the calories consumed each day in meals.
+
+  Note: this function excludes outliers reporting more than 6,000 KCals
+  consumed in a single day.
+*/
+dailyMealCals () :=
+  block ([outlierThreshold],
+    outlierThreshold: 6000,
+    getSubsample (
+      apply (matrix,
+        mapPartitionByField (
+          corrected_meals_doy (),
+          corrected_meals_doy,
+          lambda ([doy, M],
+            [getN (M [1][corrected_meals_year_index], doy),
+             getSumFieldValues (M, corrected_meals_cals)]))),
+      daily_meals_cals,
+      leN (outlierThreshold)))$
+
+/* A matrix recording my estimated daily caloric intake. */
+DCI: dailyMealCals ()$
+
+/*
+/*
+  Returns the distribution of the number of days where my caloric
+  intake fell within intervals of 500.
+*/
+dailyCalsDistrib :
+  block ([xs],
+    xs: continuous_freq (
+      getFieldValues (DCI, daily_meals_cals),
+      [0, 6000, 6 * 2]),
+    zip ([rest (xs [1], 1), xs [2]]));
+
+/*
+  Returns the Mean Square Error equation relating a Log Normal
+  probability distribution to the empirical daily calorie consumption
+  distribution.
+*/
+dailyCalsDistribModelMSE :
+  lsquares_mse (
+    apply (matrix, dailyCalsDistrib),
+    [c, n],
+    n = length (DCI) * pdf_lognormal (c/500, m, s))$
+
+/*
+  Returns the distribution parameters (mean and standard deviation) for
+  the model probability distribution giving the probability that a
+  given number of calories will be consumed on a given day.
+
+  Note: mean = 1.483317211791294, std = 0.4220294880919173
+*/
+dailyCalsDistribModelParams :
+  block ([incrementSize, x, m, s],
+    x: lsquares_estimates_approximate (dailyCalsDistribModelMSE, [m, s], initial = [1.5, 0.5]),
+    m: rhs (x [1][1]),
+    s: rhs (x [1][2]),
+    [m, s])$
+
+/*
+  Accepts one argument: cals, a real number representing a number of
+  calories (KCal) consumed on a single day; and returns the probability
+  density that this number of calories will be consumed.
+*/
+dailyCalsDistribModel (cals) :=
+  block ([incrementSize, m, s],
+    incrementSize: 500, /* used to compute the empirical distribution dailyCalsDistrib */
+    [m, s]: dailyCalsDistribModelParams,
+    pdf_lognormal (cals/incrementSize, m, s))$
+  
+/*
+  Divides the observed range of the number of calories consumed in
+  single day into increments of 500 KCal, and plots the number of days
+  that fell within each increment, along with the predicted
+  distribution using the distribution model given above.
+*/
+plotCalsDistrib () :=
+  draw2d (
+    point_size = 1,
+    point_type = filled_circle,
+    points (dailyCalsDistrib),
+    color = green,
+    explicit (length (DCI) * dailyCalsDistribModel (cals), cals, 0, 6000),
+    file_name = "tmp_plot",
+    terminal = 'svg)$
+
+plotCalories () :=
+  plotPoints (mapPartitionByField (M, meals_doy, lambda ([doy, N], [doy, getSumFieldValues (N, meals_cals)])), "Calories Consumed by Day", "Day of Year (GMT)", "Calories (est)");
+
+/*
+  Returns a timeseries of my best estimate for my daily caloric intake.
+
+  Note: for days without observations (and days excluded as outliers),
+  this function substitutes my mean observed caloric intake.
+*/
+estDailyCals (minDoys) :=
+  block ([M, doys, maxDoys],
+    M: partitionSampleByField (DCI, daily_meals_n),
+    doys: getFieldValues (DCI, daily_meals_n),
+    maxDoys: smax (doys),
+    makelist (
+      if matrixp (M [doy])
+      then [doy, getSumFieldValues (M [doy], daily_meals_cals)]
+      else [doy, meanDailyCals],
+      doy, minDoys, maxDoys));
+
+/*
+  Returns a matrix giving my best estimate for my cumulative daily
+  caloric intake.
+*/
+cumDailyCals (minDoy) :=
+  lreduce (
+    lambda ([acc, row],
+      block ([currSum, M, nextSum],
+        [currSum, M]: acc,
+        nextSum: currSum + getFieldValue (daily_meals_cals)(row),
+        [nextSum,
+         addrow (M, [
+           getFieldValue (daily_meals_n)(row),
+           nextSum])])),
+    estDailyCals (minDoy),
+    [0, matrix ()])[2]$
+*/         
+
+/* III. Exercise */
+/*
+plotExercise () :=
+  block ([threshold, width, A, B, f, g, ps],
+    threshold: 60 * 60,
+    width: 20,
+    A: getSubsample (E, exercise_time, leN (threshold)),
+    B: apply (matrix,
+         map (
+           lambda ([row], [
+             divn (getFieldValue (exercise_doy)(row), width),
+             getFieldValue (exercise_cals)(row)]),
+           args (A))),
+    f: new (field (1, identity)),
+    g: new (field (2, identity)),
+    ps: mapPartitionByField (B, f, lambda ([n, C], [n, getSumFieldValues (C, g)])),
+    plotPoints (ps, "Calories Expended in Exercise", "Day of Year (20 day intervals)", "Calories"))$
+*/
+daily_exercise_n_index: 1$
+daily_exercise_cals_index: 2$
+
+daily_exercise_n: new (field (daily_exercise_n_index, identity))$
+daily_exercise_cals: new (field (daily_exercise_cals_index, identity))$
+
+/*
+  Average Calories per exercise session.
+
+  Note: 355.5886524822695
+*/
+avgSessionCals () :=
+  block ([A], A: getSubsample (E, exercise_time, leN (60 * 60)), getSumFieldValues (A, exercise_cals)/length (A))$
+/*
+/*
+  Note: 169.9593220338983
+*/
+avgBurnedPerDayByExercise () :=
+  block ([A], A: getSubsample (E, exercise_time, leN (60 * 60)), getSumFieldValues (A, exercise_cals)/(getMaxFieldValue (E, exercise_doy) - getMinFieldValue (E, exercise_doy)))$
+
+/*
+  Note: 0.5322033898305085
+*/
+exerciseFreq () :=
+  length (E)/(getMaxFieldValue (E, exercise_doy) - getMinFieldValue (E, exercise_doy))$
+*/
+/*
+  Returns a list of the form [n, cals], where each entry represents a
+  day, n represents the number of days that elapsed between Jan 1 2017
+  and the given day; and cals, represents the number of calories burned
+  through exercise on the given day.
+*/
+dailyExercise () :=
+  block ([outlierThreshold, M],
+    outlierThreshold: 60 * 60,
+    M: getSubsample (E, exercise_time, leN (outlierThreshold)),
+    mapPartition (M,
+      lambda ([row],
+        getN (
+          getFieldValue (exercise_year)(row),
+          getFieldValue (exercise_doy)(row))),
+      lambda ([n, N],
+        [n, getSumFieldValues (N, exercise_cals)])))$
+/*
+/*
+  Returns a timeseries reporting my best estimate for the number of
+  calories expended through exercise each day.
+*/
+estDailyExercise (minDoy) :=
+  block ([outlierThreshold, M, A, doys, maxDoy],
+    outlierThreshold: 60 * 60,
+    M: getSubsample (E, exercise_time, leN (outlierThreshold)),
+    A: partitionSampleByField (M, exercise_doy),
+    doys: getFieldValues (M, exercise_doy),
+    maxDoy: smax (doys),
+    makelist (
+      if matrixp (A [doy])
+      then [doy, getSumFieldValues (A [doy], exercise_cals)]
+      else [doy, 0],
+      doy, minDoy, maxDoy))$
+
+/*
+  Returns a timeseries reporting my best estimate for the cumulative
+  number of calories expended through exercise from the first exercise
+  observation to the given date.
+*/
+cumDailyExercise (minDoy) :=
+  lreduce (
+    lambda ([acc, row],
+      block ([currSum, M, nextSum],
+        [currSum, M]: acc,
+        nextSum: currSum + getFieldValue (daily_exercise_cals)(row),
+        [nextSum,
+         addrow (M, [
+           getFieldValue (daily_exercise_doy)(row),
+           nextSum])])),
+    estDailyExercise (minDoy),
+    [0, matrix ()])[2]$
+*/ 
+
+/* IV. Weight */
+
+daily_weight_n_index: 1$
+daily_weight_cals_index: 2$
+
+daily_weight_n: new (field (daily_weight_n_index, identity))$
+daily_weight_cals: new (field (daily_weight_cals_index, identity))$
+
+dailyWeight () :=
+  mapPartition (W,
+    lambda ([row],
+      getN (
+        getFieldValue (weight_year)(row),
+        getFieldValue (weight_doy)(row))),
+    lambda ([n, M],
+      [n, getMaxFieldValue (M, weight_weight)]))$
+
+/*
+estDailyWeight (minDoy) :=
+  block ([A, B, C],
+    A: getSubsample (W, weight_doy, geN (minDoy)),
+    B: mapPartitionByField (A, weight_doy,
+         lambda ([doy, M], [doy, getMaxFieldValue (M, weight_weight)])),
+    C: sort (B, lambda ([row0, row1], 
+         is (row0 [1] <= row1 [1]))),
+    lreduce (
+      lambda ([acc, row],
+        block ([prevDoy, prevWeight, M, currDoy, currWeight],
+          [prevDoy, prevWeight, M]: acc,
+          [currDoy, currWeight]: row,
+          [currDoy, currWeight,
+           append (M,
+             makelist (
+               [doy,
+                ((doy - prevDoy) *
+                 (currWeight - prevWeight)/(currDoy - prevDoy)) +
+                prevWeight],
+               doy, prevDoy + 1, currDoy))])),
+      C, [minDoy - 1, 0, []]))[3]$
+    
+plotWeight () :=
+  block ([ps],
+    ps: map (lambda ([row],
+          [getFieldValue (weight_doy)(row),
+           getFieldValue (weight_weight)(row)]),
+          args (W)),
+    draw2d (
+      point_size = 1,
+      point_type = filled_circle,
+      points (ps),
+      grid = true,
+      title = "Weight",
+      xlabel = "Day of Year (GMT)",
+      ylabel = "Weight (lbs)",
+      yrange = [smin (makelist (p [2], p, ps)), smax (makelist (p [2], p, ps))],
+      file_name = "tmp_plot",
+      terminal = 'svg))$
+*/
+/* V. Older Data */
+
+hist_n_index: 1$
+hist_daily_meals_cals_index: 4$
+hist_daily_weight_index: 6$
+hist_pressure_index: 7$
+hist_waist_index: 10$
+hist_bicep_index: 11$
+hist_daily_exercise_index: 12$
+
+hist_n: new (field (hist_n_index, identity))$
+hist_daily_meals_cals: new (field (hist_daily_meals_cals_index, identity))$
+hist_daily_weight: new (field (hist_daily_weight_index, identity))$
+hist_pressure: new (field (hist_pressure_index, identity))$
+hist_waist: new (field (hist_waist_index, identity))$
+hist_bicep: new (field (hist_bicep_index, identity))$
+hist_daily_exercise: new (field (hist_daily_exercise_index,
+  lambda ([x], if is (x = 1) then avgSessionCals () else 0)))$
+
+H: read_matrix ("preprocessed_data/nutrition_exercise.csv")$
+
+/* VI. Composite Time Series */
+
+minN:
+  getMinFieldValue (H, hist_n)$
+
+maxN:
+  min (
+    getMaxFieldValue (DCI, daily_meals_n),
+    getMaxFieldValue (dailyExercise (), daily_exercise_n),
+    getMaxFieldValue (dailyWeight (), daily_weight_n))$
+
+composite_data_n_index: 1$
+composite_data_meals_cals_index: 2$
+composite_data_exercise_cals_index: 3$
+composite_data_weight_index: 4$
+
+composite_data_n: at (composite_data_n_index)$
+composite_data_meals_cals: at (composite_data_meals_cals_index)$
+composite_data_exercise_cals: at (composite_data_exercise_cals_index)$
+composite_data_weight: at (composite_data_weight_index)$
+
+getCompositeData () :=
+  block (
+    [dailyHistArray,
+     dailyMealsCalsArray,
+     dailyExerciseArray,
+     dailyWeightArray],
+    dailyHistArray:
+      toArray (
+        getFieldValue (hist_n),
+        lambda ([row],
+          [getFieldValue (hist_daily_meals_cals)(row),
+           getFieldValue (hist_daily_weight)(row),
+           getFieldValue (hist_daily_exercise)(row)]),
+        H),
+    dailyMealsCalsArray:
+      toArray (
+        getFieldValue (daily_meals_n),
+        getFieldValue (daily_meals_cals),
+        DCI),
+    dailyExerciseArray:
+      toArray (
+        getFieldValue (daily_exercise_n),
+        getFieldValue (daily_exercise_cals),
+        dailyExercise ()),
+    dailyWeightArray:
+      toArray (
+        getFieldValue (daily_weight_n),
+        getFieldValue (daily_weight_cals),
+        dailyWeight ()),
+    makelist (
+      if listp (dailyHistArray [n])
+      then
+        [n,
+         if numberp (dailyHistArray [n][1]) then dailyHistArray [n][1] else 0,
+         if numberp (dailyHistArray [n][3]) then dailyHistArray [n][3] else 0,
+         if numberp (dailyHistArray [n][2]) then dailyHistArray [n][2] else 0]
+      else
+        [n,
+         if numberp (dailyMealsCalsArray [n])
+         then dailyMealsCalsArray [n]
+         else 0,
+         if numberp (dailyExerciseArray [n])
+         then dailyExerciseArray [n]
+         else 0,
+         if numberp (dailyWeightArray [n])
+         then dailyWeightArray [n]
+         else 0],
+      n, minN, maxN))$
+
+compositeData: getCompositeData ()$
+
+/*
+  My average daily caloric intake.
+
+  Note: 2045.444198895027
+*/
+meanDailyCals: getMeanFieldValue (getSubsample (compositeData, at (2), gtZero), at (2));
+
+/*
+  Sample variance in my daily caloric intake.
+
+*/
+varDailyCals: getVarFieldValue (getSubsample (compositeData, at (2), gtZero), at (2));
+
+/*
+  Sample standard deviation in my daily caloric intake.
+
+  Note: 616.2208520811847
+*/
+stdDailyCals: getStdFieldValue (getSubsample (compositeData, at (2), gtZero), at (2));
+
+compositeDataMatrix: apply (matrix, compositeData)$
+
+/*
+  Accepts three arguments: `len`, a natural number; `includeNulls`, a
+  boolean; and `f`, a field accessor; and returns a list of the form
+  [[i0, x0], ..., [iN, xN]], where i0 = floor (minN / len), iN =
+  ceil (maxN / len), each element represents a time period of length
+  `len`, and `xi` represents the average value of the given field over
+  the i-th period. If `includeNulls` is false, this function excludes 0
+  values when computing averages. Otherwise, it includes them.
+*/
+getIntervalAverage (len, includeNulls, outlierThreshold, fx, fy) :=
+  sort (
+    mapPartition (
+      getSubsample (compositeDataMatrix, fy, leN (outlierThreshold)),
+      buildq ([len, fx], lambda ([row], divn (getFieldValue (fx)(row), len))),
+      buildq (
+        [includeNulls, fy],
+        lambda ([x, M],
+          block ([xs],
+            xs: if includeNulls
+               then getFieldValues (M, fy)
+               else sublist (getFieldValues (M, fy), gtZero),
+            [x, if emptyp (xs) then 0 else mean (xs)])))),
+    lambda ([row0, row1], is (row0 [1] <= row1 [1])))$
+
+composite_data_array_meals_index: 1$
+composite_data_array_exercise_cals_index: 2$
+composite_data_array_weight_index: 3$
+
+composite_data_array_meals: at (composite_data_array_meals_index)$
+composite_data_array_exercise_cals: at (composite_data_array_exercise_cals_index)$
+composite_data_array_weight: at (composite_data_array_weight_index)$
+
+getCompositeDataArray () :=
+  toArray (
+    getFieldValue (composite_data_n),
+    select ([
+      composite_data_meals_cals,
+      composite_data_exercise_cals,
+      composite_data_weight]),
+    compositeData)$
+
+compositeDataArray: getCompositeDataArray ()$
+
+/*
+  Accepts three arguments: len, a natural number; includeNulls, a 
+  boolean value; and offset, a natural number; and returns a list of
+  the form `[[minN + 60, x0], .., [maxN, xN]]`, where each element
+  represents a day, and xi represents the average value of the
+  Composite Data Array field at the given offset over the preceding 60
+  days. If `includeNulls` is false, this function ignores instances in
+  which the field value equals 0 when computing averages.
+
+  Note: this function can be used to compute rolling averages.
+*/
+getRollingAverage (len, includeNulls, offset) :=
+  block ([result],
+    result: [],
+    for n: minN + len thru maxN do
+      block ([xs],
+        xs: [],
+        for m: n - len thru n do
+          block ([row],
+            row: compositeDataArray [m],
+            if listp (row)
+            then
+              block ([x],
+                x: getFieldValue (at (offset))(row),
+                if includeNulls or gtZero (x) 
+                then push (x, xs)
+                else false)
+            else false),
+        if emptyp (xs)
+        then false
+        else push ([n, mean (xs)], result)),
+    result)$
+  
+getDeltaWeightMatrix () :=
+  block ([result],
+    result: [],
+    for i: 2 thru length (compositeData) do
+      block ([n, currWeight, prevWeight, prevMeals, prevExercise],
+        n: getFieldValue (composite_data_n)(compositeData [i]),
+        currWeight: getFieldValue (composite_data_weight)(compositeData [i]),
+        prevWeight: getFieldValue (composite_data_weight)(compositeData [i - 1]),
+        prevMeals: getFieldValue (composite_data_meals_cals)(compositeData [i - 1]),
+        prevExercise: getFieldValue (composite_data_exercise_cals)(compositeData [i - 1]),
+      if is (currWeight > 0) and
+         is (prevWeight > 0) and
+         is (prevMeals > 0)
+      then
+        push (
+          [n, currWeight, prevWeight, prevMeals, prevExercise],
+          result)
+      else false),
+    result)$ 
+
+getSpanDeltaWeightMatrix () :=
+  block ([result],
+    result: [],
+    for i: 2 thru length (compositeData) do
+      block ([n, m, currWeight, prevWeight, prevMeals, prevExercise],
+        n: getFieldValue (composite_data_n)(compositeData [i]),
+        currWeight: getFieldValue (composite_data_weight)(compositeData [i]),
+        prevWeight: 0,
+        prevMeals: 0,
+        prevExercise: 0,
+        for j: 1 while 
+          is (1 <= i - j) and 
+          is (0 < compositeData [i - j][composite_data_meals_cals_index]) do (
+          m: n - j,
+          prevMeals: prevMeals + compositeData [i - j][composite_data_meals_cals_index],
+          prevExercise: prevExercise + compositeData [i - j][composite_data_exercise_cals_index],
+          prevWeight: compositeData [i - j][composite_data_weight_index],
+          if is (0 < prevWeight)
+          then return (false)),
+        if is (0 < currWeight) and is (0 < prevWeight)
+        then push ([n, m, currWeight, prevWeight, prevMeals, prevExercise], result)),
+    result)$
+
+deltaWeightMatrix: getDeltaWeightMatrix ()$
+
+spanDeltaWeightMatrix: getSpanDeltaWeightMatrix ()$
+
+weightModelEqn: weight = initialWeight + k_meals * meals - k_exercise * exercise - n * metabolism$
+
+getDeltaWeightModelParams () :=
+  block ([mse],
+    mse: lsquares_mse (
+      apply (matrix, deltaWeightMatrix),
+      [n, weight, initialWeight, meals, exercise],
+      weight = initialWeight + k_meals * meals - k_exercise * exercise - metabolism),
+    lsquares_estimates_approximate (
+      mse,
+      [k_meals, k_exercise, metabolism],
+      initial = [1, 1, 1]))$
+
+getSpanDeltaWeightModelParams () :=
+  block ([mse],
+    mse: lsquares_mse (
+      apply (matrix, spanDeltaWeightMatrix),
+      [endN, startN, weight, initialWeight, meals, exercise],
+      weight = initialWeight + k_meals * meals - k_exercise * exercise - (endN - startN) * metabolism),
+    lsquares_estimates_approximate (
+      mse,
+      [k_meals, k_exercise, metabolism],
+      initial = [1, 1, 1]))$
+
+
+plotIntervalAverage (len, includeNulls, outlierThreshold, fx, fy, plotTitle, labelX, labelY) :=
+  block ([xs, ps],
+    xs: getIntervalAverage (len, includeNulls, outlierThreshold, fx, fy),
+    ps: if includeNulls
+      then xs
+      else sublist (xs, lambda ([row], gtZero (row [2]))),
+    draw2d (
+      point_size = 1,
+      point_type = filled_circle,
+      points_joined = true,
+      points (ps),
+      grid = true,
+      title = plotTitle,
+      xlabel = labelX,
+      ylabel = labelY,
+      yrange = [smin (makelist (p [2], p, ps)), smax (makelist (p [2], p, ps))],
+      file_name = "tmp_plot",
+      terminal = 'svg))$
+
+plotWeight (len) :=
+  plotIntervalAverage (
+    len, false, 200, composite_data_n, composite_data_weight,
+    sconcat ("Weight Averaged over ", len, " Day Intervals"),
+    "Number of Days Since Jan 1 2017",
+    "Average Weight over Interval (lbs)")$
+
+plotMealCals (len) :=
+  plotIntervalAverage (
+    len, false, 5000, composite_data_n, composite_data_meals_cals,
+    sconcat ("Average No. Of Calories Consumed Each Day Over ", len, " Day Intervals"),
+    "Number of Days Since Jan 1 2017",
+    "Average No. of Calories Consumed (KCal)")$
+
+plotExerciseCals (len) :=
+  plotIntervalAverage (
+    len, true, 5000, composite_data_n, composite_data_exercise_cals,
+    sconcat ("Average No. of Calories Expended Each Day Through Exercise Over ", len, " Day Intervals"),
+    "Number of Days Since Jan 1 2017",
+    "Average No. of Calories Expended Each Day (KCal)")$
+
+plotExerciseMeals (len) :=
+  plotIntervalAverage (
+    len, true, 5000, composite_data_meals_cals, composite_data_exercise_cals,
+    "Average No. of Calories Consumed in Relation to the Number of Calories Expended in Exercise",
+    "Average No. of Calories Consumed (KCal)",
+    sconcat ("Number of Calories Expended in Exercise (KCal)(Increments of ", len, ")"))$
+
+
+/* V. Weight Gain/Loss Model */
+/*
+/* The first day spanned by both our meals, exercise, and weight data. */
+startDoy:
+  max (
+    getMinFieldValue (DCI, daily_meals_n),
+    getMinFieldValue (E, exercise_doy),
+    getMinFieldValue (W, weight_doy))$
+
+/* The last day spanned by both our meals, exercise, and weight data. */
+endDoy:
+  min (
+    getMaxFieldValue (DCI, daily_meals_n),
+    getMaxFieldValue (E, exercise_doy),
+    getMaxFieldValue (W, weight_doy))$
+
+/* The number of days spanned by all of our data sets. */
+numDays:
+  endDoy - startDoy$
+
+weightModelMatrix:
+  block ([mealsData, exerciseData, weightData],
+    mealsData: cumDailyCals (startDoy),
+    exerciseData: cumDailyExercise (startDoy),
+    weightData: estDailyWeight (startDoy),
+    makelist (
+      [n, mealsData [n][2], exerciseData [n][2], weightData [n][2]],
+      n, 1, numDays))$
+
+weightModelMSE () :=
+  block ([initialWeight],
+    initialWeight: weightModelMatrix [1][4],
+    lsquares_mse (
+      apply (matrix, weightModelMatrix),
+      [n, meals, exercise, weight],
+      ev (weightModelEqn, initialWeight = initialWeight)))$
+
+/*
+   Note:
+   * k_meals = - 8.987640912772425E-5
+   * k_exercise = 3.436979487566002E-4
+   * metabolism = - 0.2779072700843973]
+
+   Note: These parameter values initially appear to violate all
+   theoretical assumptions. Eating and should not lead to weight
+   reduction, Exercise should not lead to weight gain (at least, not in
+   my naive model). Note however, that the exercise and meal
+   coefficients are negligible. The model is effectively a linear
+   regressor. The method used to compute cumulative consumed and
+   expended calories almost ensures that data collection errors will be
+   magnified - introducing significant noise. Perhaps, this noise is
+   drowning out any signal contained in the meals and exercise variables.
+
+   In the analysis below, I compute the linear regressor and compute a
+   model that looks over shorter time intervals to avoid compounding
+   errors.
+
+   This model is effectively useless. Probably due to error compounding
+   in the cumulative meals and exercise terms.
+*/
+weightModelParams:
+  block ([eqn, x],
+    eqn: weightModelMSE (),
+    x: lsquares_estimates_approximate (eqn, [k_meals, k_exercise, metabolism], initial = [1, 1, 1]),
+    [rhs (x [1][1]), rhs (x [1][2]), rhs (x [1][3])])$
+
+parameterizedWeightModel:
+  block ([initialWeight, k_meals, k_exercise, metabolism],
+    initialWeight: weightModelMatrix [1][4],
+    [k_meals, k_exercise, metabolism]: weightModelParams,
+    ev (weightModelEqn,
+      initialWeight = initialWeight,
+      k_meals = k_meals,
+      k_exercise = k_exercise,
+      metabolism = metabolism))$
+
+weightModel (row) :=
+  ev (rhs (parameterizedWeightModel),
+    n = row [1],
+    meals = row [2],
+    exercise = row [3])$
+
+/*
+  Note:
+  * k0 = 0.02939456379499851
+  * k1 = 0.871241412780778
+  * initialWeight: 178.0
+*/
+weightLinearModelParams:
+  block ([initialWeight, mse, params],
+    initialWeight: weightModelMatrix [1][4],
+    mse: lsquares_mse (
+           apply(matrix, weightModelMatrix),
+           [n, meals, exercise, weight],
+           ev (weight = k0 * n + initialWeight + k1, initialWeight = initialWeight)),
+    params: lsquares_estimates_approximate (mse, [k0, k1], initial = [1, 1]),
+    [rhs (params [1][1]),
+     rhs (params [1][2])])$
+
+weightLinearModel (n) :=
+  block ([initialWeight, k0, k1],
+    initialWeight: weightModelMatrix [1][4],
+    [k0, k1]: weightLinearModelParams,
+    k0 * n + initialWeight + k1)$
+
+plotModel () :=
+    draw2d (
+      point_size = 1,
+      point_type = filled_circle,
+      grid = true,
+      points (map (lambda ([row], [row [1], row [4]]), weightModelMatrix)),
+      color = green,
+      points (map (lambda ([row], [row [1], weightModel (row)]), weightModelMatrix)),
+      color = red,
+      explicit (weightLinearModel (n), n, 0, length (weightModelMatrix)),
+      file_name = "tmp_plot",
+      terminal = 'svg)$
+
+/*
+  Scans over the data sources and computes a matrix where each row
+  represents an observed weight change over a one day time period and
+  both the number of calories eaten in meals and burnt through exercise
+  the day before.
+*/
+weightChangeMatrix () :=
+  block ([
+    mealsMatrixPartition,
+    dailyExercise,
+    weightMatrixPartition,
+    result],
+    mealsMatrixPartition: partitionSampleByField (DCI, daily_meals_n),
+    dailyExercise: estDailyExercise (startDoy),
+    weightMatrixPartition: partitionSampleByField (W, weight_doy),
+    result: [],
+    for n: 1 thru numDays do
+      block ([doy],
+        doy: startDoy + n,
+        if matrixp (weightMatrixPartition [doy])
+        then
+          if matrixp (weightMatrixPartition [doy - 1]) and
+             matrixp (mealsMatrixPartition [doy - 1])
+          then
+            block (
+              result: push (
+                [doy,
+                 getMaxFieldValue (weightMatrixPartition [doy], weight_weight),
+                 getMaxFieldValue (weightMatrixPartition [doy - 1], weight_weight),
+                 getSumFieldValues (mealsMatrixPartition [doy - 1], daily_meals_cals),
+                 dailyExercise [n][2]],
+                result),
+              true)
+          else false
+        else false),
+    result)$
+
+weightChangeModelMSE () :=
+  lsquares_mse (
+    apply (matrix, weightChangeMatrix ()),
+    [weight, initialWeight, meals, exercise],
+    weight = initialWeight + k_meals * meals - k_exercise * exercise - metabolism)$
+
+/*
+  Note:
+    * k_meals = 11.27425089219035
+    * k_exercise = - 0.01387918402163676
+    * metabolism = 1991.727695259444
+*/
+weightChangeModelParams () :=
+  block ([mse],
+    mse: weightChangeModelMSE (),
+    lsquares_estimates_approximate (mse, [k_meals, k_exercise, metabolism], initial = [1, 1, 1]))$
+
+/*
+  Returns the average number of calories consumed in relation to the
+  number of calories burned in exercise on a given day (bucketized into
+  increments of 100 KCal). The graph shows no obvious correlation
+  supporting a "hunger effect" - the hypothesis that the negative
+  correlation between exercise and weight is due to exercise inducing
+  increased hunger leading to an increase in the number of calories
+  consumed on the day of exercise.
+
+  Note:
+    [[0, 2020.666666666666], [100, 2440], [200, 1800], 
+     [300, 1955.555555555555], [400, 2123.076923076923], [500, 1844.655555555555], 
+     [600, 1800], [700, 2000]]
+
+  Note:
+    Remaining hypotheses to explain negative k_exercise coeff:
+    1. fatigue effect - exercising leads to a reduction in non-exercise
+       activity during the day of exercise
+    2. delayed hunger effect - exercising leads to an increase in
+       calories eaten the subsequent day
+    3. muscle effect - exercising leads to a minute increase in muscle
+       mass that outweighs the fat burned. Need fine grained waist and
+       bicep measures to test.
+    4. exercise irrelevant - possibility that the k_exercise parameter
+       is not statistically relevant that exercise has a negligably
+       small effect that is being drowned out by noise in data.
+    5. noisy data - exercise effect is small, but not negligable.
+       Instead, the noise factor is large and drowing out the exercise
+       effect.
+*/
+exerciseAndMeals () :=
+  sort (
+    mapPartition (
+      apply (matrix, joinTables (DCI, estDailyExercise (startDoy))),
+      lambda ([row], divn (row [4], 100)),
+      lambda ([k, M], [k, getMeanFieldValue (M, new (field (2, identity)))])),
+    lambda ([r0, r1], is (r0 [1] <= r1 [1])))$
+
+/*
+*/
+deltaWeightMatrix :
+  block ([P, minDoy, maxDoy, result],
+    P: partitionSampleByField (W, weight_doy),
+    minDoy: getMinFieldValue (W, weight_doy),
+    maxDoy: getMaxFieldValue (W, weight_doy),
+    result: [],
+    for doy: minDoy thru maxDoy do
+      if matrixp (P [doy]) and
+         matrixp (P [doy - 1])
+      then
+        block ([currWeight, prevWeight, deltaWeight],
+          currWeight: getFieldValue (weight_weight)(P [doy][1]),
+          prevWeight: getFieldValue (weight_weight)(P [doy - 1][1]),
+          deltaWeight: currWeight - prevWeight,
+          result: push (
+            [doy, currWeight, prevWeight, deltaWeight],
+            result),
+          true)
+      else false,
+    result)$
+
+deltaWeightFreq () :=
+  block ([ xs, n, lower, upper, freq],
+    xs: getFieldValues (apply (matrix, deltaWeightMatrix), new (field (4, identity))),
+    lower: floor (smin (xs)),
+    upper: ceiling (smax (xs)),
+    freq: continuous_freq (xs, [lower, upper, 2 * (upper - lower)]),
+    zip ([rest (freq [1], 1), freq [2]]))$
+
+/*
+  Note:
+    [m = 0.1500253489469554, s = 7.038706390313118]
+*/
+dailyWeightChangeFreqModelParams () :=
+  block ([n, M, mse, params],
+    n: length (deltaWeightMatrix),
+    M: apply (matrix, deltaWeightFreq ()),
+    mse: lsquares_mse (M, [w, f], f = n * pdf_normal (w, m, s)),
+    params: lsquares_estimates_approximate (mse, [m, s], initial = [0, 1]),
+    [rhs (params [1][1]), rhs (params [1][2])])$
+
+/*
+  Note: shows that a normal distribution does not fit the distribution
+  of daily weight changes. The distribution is approximately
+  symmetrical and bell shaped however.
+*/
+plotDailyWeightChangeFreq () :=
+  block ([n, m, s, ps],
+    n: length (deltaWeightMatrix),
+    [m, s]: dailyWeightChangeFreqModelParams (),
+    ps: deltaWeightFreq (),
+    draw2d (
+      point_size = 1,
+      point_type = filled_circle,
+      points (ps),
+      color = green,
+      explicit (n * pdf_normal (x, m, s), x, -7, 7),
+      grid = true,
+      title = "Daily Change in Weight (Frequency)",
+      xlabel = "Change in Weight (lbs)(single day)(increments of 0.5 lbs)",
+      ylabel = "Number of Days",
+      yrange = [0, smax (makelist (p [2], p, ps))],
+      file_name = "tmp_plot",
+      terminal = 'svg))$
+*/
+
+/*
+  Returns the average weight change observed over short periods in
+  relation to the average number of calories consumed over that period.
+
+  Note: this function examines those periods for which, the start and
+  end date have weight observations, the start date has a meals
+  observation, and every intervening date has a meals observation.
+
+  Note: this function divides the observed range of daily caloric
+  intake into intervals of 200, and ignores any range for which fewer
+  than 10 observations were made.
+*/
+getAvgWeightChange () :=
+  sublist (
+    sort (
+      mapPartition (
+        spanDeltaWeightMatrix,
+        lambda ([row], divn (row [5]/(row [1] - row [2]), 200)),
+        lambda ([k, M],
+          if 10 < length (M)
+          then
+            [k,
+             lsum ((row [3] - row [4])/(row [1] - row [2]), row, args (M))/length (M)]
+          else [0, 0])),
+      lambda ([r0, r1], is (r0 [1] < r1 [1]))),
+    lambda ([row], is (row [1] > 0)))$
+
+/*
+  Note:
+*/
+getAvgWeightChangeParams:
+  block ([mse],
+    mse: lsquares_mse (
+      apply (matrix, getAvgWeightChange ()),
+      [meals, dw],
+      dw = km * meals + k),
+    lsquares_estimates_approximate (mse, [km, k]))$
+
+getAvgWeightChangeModel (meals) :=
+  block ([params, km, k],
+    params: getAvgWeightChangeParams,
+    km: rhs (params [1][1]),
+    k:  rhs (params [1][2]),
+    km * meals + k)$
+
+plotAvgWeightChange () :=
+  plotPoints (
+    getAvgWeightChange (),
+    "Average Daily Weight Change in Relation to Average Daily Calories Consumed",
+    "Average Daily Calories Consumed (KCal)(200 KCal Increments)",
+    "Average Daily Weight Gain (Lbs)")$
+
+/*
+  Returns the probability that I lost weight over a given short period
+  of time given the average number of calories consumed over that period.
+
+  Note: this function examines those periods for which, the start and
+  end date have weight observations, the start date has a meals
+  observation, and every intervening date has a meals observation.
+
+  Note: this function divides the observed range of daily caloric
+  intake into intervals of 200, and ignores any range for which fewer
+  than 10 observations were made.
+
+  Note: in theory, the caloric intake that corresponds to a 100%
+  probability of weight loss equals my basal metabolic rate.
+*/
+getProbabilityOfWeightLossCals () :=
+  sublist (
+    sort (
+      mapPartition (
+        spanDeltaWeightMatrix,
+        lambda ([row], divn (row [5]/(row [1] - row [2]), 200)),
+        lambda ([k, M],
+          if 10 < length (M)
+          then
+            [k,
+             length (subsample (M, lambda ([row], is (row [3] < row [4]))))/
+             length (M)]
+          else [0, 0])),
+      lambda ([r0, r1], is (r0 [1] < r1 [1]))),
+    lambda ([row], is (row [1] > 0)))$
+
+plotProbabilityOfWeightLoss () :=
+  plotPoints (
+    getProbabilityOfWeightLossCals (),
+    "Probability of Weight Loss Given Average Daily Calories Consumed",
+    "Average Daily Calories Consumed over Observation Periods",
+    "Probability Weight Loss Reported at End of Period")$
+
+/*
+  Over a short time period, the probability that I would lose weight
+  appears to linearly decrease with the number of calories consumed.
+  This function returns estimates for the parameters of a linear model.
+
+  Note:
+  * km = - 4.98816770478944E-4
+  * k = 1.531172787366103
+*/
+getProbabilityOfWeightLossModelParams () :=
+  block ([mse],
+    mse: lsquares_mse (
+      apply (matrix, getProbabilityOfWeightLossCals ()),
+      [meals, probability],
+      probability = km * meals + k),
+    lsquares_estimates_approximate (mse, [km, k]))$
+
+/*
+  Theoretically, the probability that I will lose weight approaches 1
+  as the number of calories consumed in a given time period approaches
+  my basal metabolism rate. This function uses this method to estimate
+  my basal metabolism rate.
+
+  Note: 1064.865535407102 KCal/Day
+*/
+estBasalMetabolism () :=
+  block ([params, km, k],
+    params: getProbabilityOfWeightLossModelParams (),
+    km: rhs (params [1][1]),
+    k:  rhs (params [1][2]),
+    solve (1 = km * meals + k, meals))$
+
+/*
+  Returns the probability that I reported a loss in weight over a short
+  period of time given the number of calories expended in exercise each
+  day.
+
+  Note: this function examines those periods for which, the start and
+  end date have weight observations, the start date has a meals
+  observation, and every intervening date has a meals observation.
+
+  Note: this function divides the observed range of daily caloric
+  expenditure into intervals of 50, and ignores any range for which
+  fewer than 10 observations were made.
+
+  Note: this function shows a linear relationship between exercise and
+  probability of weight loss.
+*/
+getProbabilityOfWeightLossExercise () :=
+  sublist (
+    sort (
+      mapPartition (
+        spanDeltaWeightMatrix,
+        lambda ([row], divn (row [6]/(row [1] - row [2]), 50)),
+        lambda ([k, M],
+          if 5 < length (M)
+          then
+            [k,
+             length (subsample (M, lambda ([row], is (row [3] < row [4]))))/
+             length (M)]
+          else [0, 0])),
+      lambda ([r0, r1], is (r0 [1] < r1 [1]))),
+    lambda ([row], is (row [1] > 0)))$
+
+plotProbabilityOfWeightLossExercise () :=
+  plotPoints (
+    getProbabilityOfWeightLossExercise (),
+    "Probability of Weight Loss Given Average Daily Calories Burned in Exercise",
+    "Average Daily Calories Burned over Observation Periods",
+    "Probability Weight Loss Reported at End of Period")$
+
+getAverageWeightLossMealsExercise () :=
+  sublist (
+    mapPartition (
+      spanDeltaWeightMatrix,
+      lambda ([row],
+        [divn (row [5]/(row [1] - row [2]), 200),
+         divn (row [6]/(row [1] - row [2]), 200)]),
+      lambda ([k, M],
+        if is (10 <= length (M))
+        then
+          [k [1],
+           k [2],
+           mean (map (lambda ([row], row [3] - row [4]), args (M)))]
+        else [0, 0, 0])),
+    lambda ([row], is (row [1] > 0)))$
+
+/*
+  Note:
+  * km = 0.001278776355192964
+  * ke = 0.004564243766852772
+  * metabolism = 2.382325308317135
+
+  Note: this is the first set of parameters that are consistent with
+  theoretical models.
+*/
+getAverageWeightLossMealsExerciseParams:
+  block ([mse],
+    mse: lsquares_mse (
+      apply (matrix, getAverageWeightLossMealsExercise ()),
+      [meals, exercise, weightDelta],
+      weightDelta = km * meals - ke * exercise - metabolism),
+    lsquares_estimates_approximate (mse, [km, ke, metabolism]))$
+
+getAverageWeightLossMealsExerciseModel (meals, exercise) :=
+  block ([params, km, ke, metabolism],
+    params: getAverageWeightLossMealsExerciseParams,
+    km: rhs (params [1][1]),
+    ke: rhs (params [1][2]),
+    metabolism: rhs (params [1][3]),
+    km * meals - ke * exercise - metabolism)$
+
+plotAverageWeightLossMealsExercise () :=
+  block ([ps],
+    ps: getAverageWeightLossMealsExercise (),
+    draw3d (
+      color = grey,
+      contour = base,
+      contour_levels = 10,
+      surface_hide = true,
+      explicit (
+        getAverageWeightLossMealsExerciseModel (meals, exercise),
+        meals, 1600, 2600,
+        exercise, 0, 200
+      ), 
+      point_size = 3,
+      point_type = filled_circle,
+      enhanced3d = [x + y * 10, x, y, z],
+      points (ps),
+      grid = true,
+      title = "Average Daily Change in Weight In Relation to Calories Eaten and Burned Through Exercise Each Day With Model",
+      xlabel = "Average Number of Calories Eaten Each Day (KCal)(Increments of 200 KCal)",
+      ylabel = "Average Number of Calories Burned Each Day (KCal)(Increments of 200 KCal)",
+      zlabel = "Average Weight Change (Lbs)"
+/*
+      file_name = "tmp_plot",
+      terminal = 'svg
+*/
+))$
+
+getAverageWeightLossMealsExerciseErrs () :=
+  map (
+    lambda ([row],
+      (row [3] - row [4]) - getAverageWeightLossMealsExerciseModel (row [5], row [6])),
+    spanDeltaWeightMatrix)$
+
+/*
+  The distribution of errors between the model predictions and the
+  observations roughly follows a Cauchy distribution. It's fat tails
+  rule out a normal distribution. This function estimates the Cauchy
+  distribution parameters needed to fit a smoothed plot of the error
+  distribution.
+
+  Note: these parameter values are highly sensitive to the interval
+  width used for smoothing.
+
+  Note:
+  * a = - 0.1188223231523778
+  * b = 1.597706383814761
+*/
+errModelParams:
+  block ([E, F, mse, m, s],
+    E: apply (matrix, map (lambda ([x], [x]), getAverageWeightLossMealsExerciseErrs ())),
+    F: fieldValuesInIntervalsPoints (1.0, E, at (1)),
+    mse: lsquares_mse (
+      apply (matrix, F),
+      [err, freq],
+      freq = 155 * pdf_cauchy (err, a, b)),
+     lsquares_estimates_approximate (mse, [a, b], initial = [0, 3]))$
+
+/*
+  Accepts one argument: err (lbs), and returns the probability density
+  that err will be observed.
+
+  Note: the error is roughly (ad-hoc) a Cauchy distribution.
+*/
+errModel (err) :=
+  block ([params, a, b],
+    params: errModelParams,
+    a: rhs (params [1][1]),
+    b: rhs (params [1][2]), 
+    pdf_cauchy (err, a, b))$
+      
+plotModelErrs () :=
+  block ([E, ps],
+    E: apply (matrix, map (lambda ([x], [x]), getAverageWeightLossMealsExerciseErrs ())),
+    ps: fieldValuesInIntervalsPoints (1.0, E, at (1)),
+    draw2d (
+    point_size = 1,
+    point_type = filled_circle,
+    points_joined = true,
+    points (ps),
+    color = green,
+    explicit (length (E) * errModel (err), err, -10, 10),
+    grid = true,
+    file_name = "tmp_plot",
+    terminal = 'svg))$
